@@ -282,8 +282,13 @@ export default function App() {
   };
 
   return (
-    <div className="flex w-screen h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden font-sans select-none transition-colors duration-300">
+    <div className="flex w-screen h-screen bg-slate-100 dark:bg-[#0F172A] text-slate-850 dark:text-slate-100 overflow-hidden font-sans select-none transition-colors duration-300 relative">
       
+      {/* 🌌 Celestial Ambient Glow spheres (Frosted Glass context) */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/10 dark:bg-purple-600/20 rounded-full blur-[100px] md:blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-[100px] md:blur-[120px]" />
+      </div>
       {/* 🔮 Left Sidebar controls */}
       <Sidebar
         sessions={sessions}

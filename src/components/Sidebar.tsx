@@ -72,10 +72,10 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="w-80 h-full border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col justify-between select-none relative z-10 font-sans transition-colors duration-300">
+    <aside className="w-80 h-full border-r border-slate-200/50 dark:border-white/10 bg-white/40 dark:bg-black/30 backdrop-blur-xl flex flex-col justify-between select-none relative z-10 font-sans transition-colors duration-300">
       
       {/* 🚀 OrbitBot Futuristic Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+      <div className="p-4 border-b border-slate-200/40 dark:border-white/5 bg-white/10 dark:bg-white/5 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           {/* Logo element representing futuristic orbital ring & AI core */}
           <div className="relative w-10 h-10 flex items-center justify-center">
@@ -88,7 +88,7 @@ export default function Sidebar({
           </div>
           <div>
             <span className="text-lg font-bold tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-1.5 leading-none">
-              OrbitBot <span className="text-[10px] bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 font-mono px-1 py-0.5 rounded uppercase">v1.2</span>
+              OrbitBot <span className="text-[10px] bg-white/20 dark:bg-violet-950 text-violet-700 dark:text-violet-300 font-mono px-1 py-0.5 rounded uppercase">v1.2</span>
             </span>
             <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
               Beyond Conversation
@@ -99,7 +99,7 @@ export default function Sidebar({
         {/* ➕ Create Chat Action */}
         <button
           onClick={onNewChat}
-          className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-medium text-sm transition-all shadow-md shadow-violet-500/10 cursor-pointer active:scale-95 duration-200"
+          className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 dark:from-white/10 dark:to-white/5 dark:hover:bg-white/15 dark:border dark:border-white/10 text-white rounded-xl font-medium text-sm transition-all shadow-md shadow-violet-500/10 dark:shadow-none cursor-pointer active:scale-95 duration-200"
         >
           <Plus className="w-4 h-4" />
           <span>New Chat</span>
@@ -116,7 +116,7 @@ export default function Sidebar({
             placeholder="Search conversations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-200/50 dark:bg-slate-900 border border-slate-300/40 dark:border-slate-800/80 rounded-lg text-slate-800 dark:text-slate-200 placeholder-slate-400/80 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500 font-medium"
+            className="w-full pl-9 pr-4 py-1.5 text-xs bg-white/20 dark:bg-white/5 border border-slate-300/30 dark:border-white/10 rounded-lg text-slate-800 dark:text-slate-100 placeholder-slate-400/80 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-400 font-medium backdrop-blur-md"
           />
         </div>
 
@@ -129,7 +129,7 @@ export default function Sidebar({
             )}
           </div>
           {filteredSessions.length === 0 ? (
-            <div className="p-4 text-center rounded-lg border border-dashed border-slate-200 dark:border-slate-800/60 bg-slate-100/30 dark:bg-slate-900/40">
+            <div className="p-4 text-center rounded-lg border border-dashed border-slate-200/60 dark:border-white/10 bg-white/5 dark:bg-white/5">
               <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">No chats found matching criteria</p>
             </div>
           ) : (
@@ -144,8 +144,8 @@ export default function Sidebar({
                   onClick={() => onSelectSession(session.id)}
                   className={`group relative flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all duration-200 ${
                     isActive
-                      ? "bg-violet-50/70 dark:bg-violet-950/20 border-violet-100 dark:border-violet-900 shadow-sm"
-                      : "bg-transparent border-transparent hover:bg-slate-200/40 dark:hover:bg-slate-900/40 hover:border-slate-200/50 dark:hover:border-slate-905"
+                      ? "bg-white/60 dark:bg-white/10 border-slate-200/60 dark:border-white/10 shadow-sm"
+                      : "bg-transparent border-transparent hover:bg-white/25 dark:hover:bg-white/5 hover:border-slate-200/30 dark:hover:border-white/5"
                   }`}
                 >
                   <div className="flex-1 min-w-0 pr-6 flex items-start gap-2.5">
@@ -167,7 +167,7 @@ export default function Sidebar({
                   {/* Immediate Delete Trigger */}
                   <button
                     onClick={(e) => onDeleteSession(session.id, e)}
-                    className="absolute right-2 p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-red-200 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm shrink-0"
+                    className="absolute right-2 p-1.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 bg-white/20 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-red-200 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm shrink-0"
                     title="Delete Conversation"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -181,7 +181,7 @@ export default function Sidebar({
 
       {/* ⚠️ Extended Settings Panel Drawer */}
       {showSettings && (
-        <div className="absolute inset-x-0 bottom-[140px] m-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl z-20 space-y-4 font-sans text-slate-800 dark:text-slate-200 animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="absolute inset-x-0 bottom-[140px] m-3 p-4 rounded-2xl bg-white/95 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 shadow-2xl z-30 space-y-4 font-sans text-slate-800 dark:text-slate-200 animate-in fade-in slide-in-from-bottom-5 duration-200">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
             <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-400 flex items-center gap-1.5">
               <Sliders className="w-3.5 h-3.5 text-violet-500" />
@@ -247,7 +247,7 @@ export default function Sidebar({
       )}
 
       {/* ⚙️ Core Utilities and Profiles footer */}
-      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-3.5 bg-slate-100/50 dark:bg-slate-950/80">
+      <div className="p-3 border-t border-slate-200/40 dark:border-white/5 space-y-3.5 bg-white/20 dark:bg-black/20 backdrop-blur-md">
         
         {/* Quick Menu utilities */}
         <div className="grid grid-cols-3 gap-2">
@@ -256,8 +256,8 @@ export default function Sidebar({
             onClick={() => setShowSettings(!showSettings)}
             className={`flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-[10px] font-medium border transition-all ${
               showSettings 
-                ? "bg-violet-100/80 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-300 dark:border-violet-900" 
-                : "bg-white text-slate-500 border-slate-200 hover:bg-slate-150/40 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                ? "bg-white/40 text-violet-700 border-violet-200/50 dark:bg-white/10 dark:text-white dark:border-white/10 shadow-md" 
+                : "bg-white/10 text-slate-500 border-slate-200/40 hover:bg-white/20 dark:bg-white/5 dark:text-slate-400 dark:border-white/5 dark:hover:bg-white/10"
             }`}
           >
             <Settings className="w-4 h-4" />
@@ -267,7 +267,7 @@ export default function Sidebar({
           {/* Theme toggler */}
           <button
             onClick={onThemeToggle}
-            className="flex flex-col items-center justify-center gap-1 py-2 bg-white text-slate-500 border border-slate-200 rounded-xl hover:bg-slate-150/40 text-[10px] font-medium dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800/40 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 py-2 bg-white/15 text-slate-500 border border-slate-200/40 hover:bg-white/25 rounded-xl text-[10px] font-medium dark:bg-white/5 dark:text-slate-400 dark:border-white/5 dark:hover:bg-white/10 transition-colors"
           >
             {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-violet-600" />}
             <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
@@ -276,7 +276,7 @@ export default function Sidebar({
           {/* Analytics open button */}
           <button
             onClick={onOpenAnalytics}
-            className="flex flex-col items-center justify-center gap-1 py-2 bg-white text-slate-500 border border-slate-200 rounded-xl hover:bg-slate-150/40 text-[10px] font-medium dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800/40 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 py-2 bg-white/15 text-slate-500 border border-slate-200/40 hover:bg-white/25 rounded-xl text-[10px] font-medium dark:bg-white/5 dark:text-slate-400 dark:border-white/5 dark:hover:bg-white/10 transition-colors"
           >
             <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
             <span>Analytics</span>
@@ -284,7 +284,7 @@ export default function Sidebar({
         </div>
 
         {/* 👤 Interactive User Profile display */}
-        <div className="flex items-center gap-2.5 p-2 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-xl">
+        <div className="flex items-center gap-2.5 p-2 bg-white/30 dark:bg-black/30 border border-slate-200/30 dark:border-white/10 rounded-xl bg-clip-padding backdrop-blur-md">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-500 text-white flex items-center justify-center text-xs font-bold shadow-sm font-mono flex-shrink-0 animate-pulse [animation-duration:5s]">
             OB
           </div>

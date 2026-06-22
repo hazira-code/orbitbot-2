@@ -75,7 +75,7 @@ export default function AnalyticsPanel({ onClose, analyticsData }: AnalyticsPane
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 180 }}
-        className="h-full w-full max-w-xl bg-slate-900 border-l border-slate-800 text-slate-100 p-6 shadow-2xl flex flex-col justify-between overflow-y-auto"
+        className="h-full w-full max-w-xl bg-slate-950/80 backdrop-blur-3xl border-l border-white/10 text-slate-100 p-6 shadow-2xl flex flex-col justify-between overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">

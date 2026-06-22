@@ -223,8 +223,29 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
   };
 
   return (
-    <div className="flex-1 h-full flex flex-col justify-between bg-white dark:bg-slate-900 transition-colors duration-300 relative overflow-hidden">
+    <div className="flex-grow flex flex-col h-full justify-between bg-white/20 dark:bg-[#0F172A]/20 backdrop-blur-md transition-colors duration-300 relative overflow-hidden">
       
+      {/* 🌐 Translucent Navigation Header */}
+      <header className="h-16 border-b border-slate-200/40 dark:border-white/5 flex items-center justify-between px-6 md:px-8 z-10 bg-white/30 dark:bg-white/5 backdrop-blur-sm flex-shrink-0">
+        <div className="flex items-center gap-3.5 text-xs text-slate-500 dark:text-slate-400 font-medium select-none">
+          <span className="hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer">Dashboard</span>
+          <span className="opacity-60">/</span>
+          <span className="text-slate-800 dark:text-white font-semibold">Conversational Assistant</span>
+        </div>
+        <div className="flex items-center gap-4 select-none">
+          <div className="flex gap-4">
+            <div className="text-right hidden sm:block">
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold leading-none">Connection</p>
+              <p className="text-xs font-bold text-cyan-500 dark:text-cyan-400 leading-normal">Active</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold leading-none">Intelligence</p>
+              <p className="text-xs font-bold text-violet-600 dark:text-violet-400 leading-normal">v1.2 Pro</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Messages Window Scrollpane */}
       <div 
         ref={chatContainerRef}
@@ -247,13 +268,13 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
             </div>
 
             <div className="space-y-2.5">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 sm:text-4xl">
-                OrbitBot AI
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 dark:from-white dark:to-slate-400">
+                Welcome to OrbitBot AI
               </h1>
               <p className="text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto font-medium leading-relaxed">
                 &ldquo;Your Intelligent AI Companion Beyond Conversation&rdquo;
                 <span className="block text-xs text-slate-400 dark:text-slate-500 font-normal italic mt-1">
-                  Merge instantaneous local macros with server-side LLM knowledge bases.
+                  Integrating swift cloud logic with server-side Gemini 3.5 knowledge.
                 </span>
               </p>
             </div>
@@ -268,7 +289,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
                   <div
                     key={item.id}
                     onClick={() => onSelectPrompt(item.prompt)}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/45 hover:bg-slate-100 dark:hover:bg-slate-900 hover:border-violet-500 dark:hover:border-violet-800 transition-all text-left cursor-pointer group hover:-translate-y-0.5 duration-200"
+                    className="p-5 rounded-2xl border border-slate-200/50 dark:border-white/10 bg-white/30 dark:bg-white/5 backdrop-blur-md hover:bg-white/40 dark:hover:bg-white/10 hover:border-violet-500/50 dark:hover:border-purple-500/50 transition-all text-left cursor-pointer group hover:-translate-y-0.5 duration-200 shadow-sm"
                   >
                     <div className="flex items-center gap-2.5 mb-1.5">
                       {renderPromptIcon(item.icon)}
@@ -290,7 +311,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
             
             {/* Header info badge depicting properties */}
             <div className="flex justify-center select-none">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded-full text-[10px] font-mono leading-none">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/30 dark:bg-black/40 text-slate-600 dark:text-slate-400 border border-slate-250/40 dark:border-white/10 rounded-full text-[10px] font-mono leading-none backdrop-blur-sm">
                 <Sparkles className="w-3 h-3 text-violet-500" />
                 ACTIVE ENGINE PROTOCOL: GEMINI 3.5 FLASH • STATS ACTIVE
               </span>
@@ -314,10 +335,10 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
                   )}
 
                   {/* Message Bubble box */}
-                  <div className={`max-w-[82%] p-5 rounded-2xl border flex flex-col justify-between shadow-sm relative ${
+                  <div className={`max-w-[82%] p-5 rounded-2xl border flex flex-col justify-between shadow-sm relative backdrop-blur-sm ${
                     isUser
-                      ? "bg-slate-150 border-slate-200 text-slate-800 dark:bg-slate-800/80 dark:border-slate-700 dark:text-slate-100 rounded-tr-none"
-                      : "bg-slate-50/70 dark:bg-slate-950/50 border-slate-200/90 dark:border-slate-800/90 rounded-tl-none text-slate-800 dark:text-slate-200"
+                      ? "bg-white/70 dark:bg-white/15 border-slate-200/50 dark:border-white/10 text-slate-800 dark:text-slate-100 rounded-tr-none"
+                      : "bg-white/45 dark:bg-white/5 border-slate-200/45 dark:border-white/10 rounded-tl-none text-slate-800 dark:text-slate-200"
                   }`}>
                     {/* Render attachment details if attached by user */}
                     {msg.attachment && (
@@ -424,7 +445,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
       </div>
 
       {/* Input controller panel */}
-      <div className="p-4 md:p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 select-none flex-shrink-0">
+      <div className="p-4 md:p-6 border-t border-slate-200/40 dark:border-white/5 bg-white/10 dark:bg-black/10 backdrop-blur-md select-none flex-shrink-0">
         <form onSubmit={handleSend} className="max-w-3.5xl mx-auto space-y-2.5">
           
           {/* Active indicator warnings or notifications */}
@@ -437,7 +458,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
 
           {/* Active file attachments queue */}
           {attachment && (
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-400 pl-3">
+            <div className="p-2 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/40 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-400 pl-3">
               <div className="flex items-center gap-2">
                 <FileCheck className="w-4 h-4 text-emerald-500 animate-pulse" />
                 <span className="font-semibold truncate max-w-[200px]" title={attachment.name}>{attachment.name}</span>
@@ -446,7 +467,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
               <button 
                 type="button" 
                 onClick={() => setAttachment(null)}
-                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-600"
+                className="p-1 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded text-slate-400 hover:text-slate-600"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -455,7 +476,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
 
           {/* Glowing Equalizer waveforms when dictation is recording */}
           {isListening && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900 rounded-xl justify-between">
+            <div className="flex items-center gap-2 px-4 py-2 bg-violet-50/20 dark:bg-violet-950/20 border border-violet-100/30 dark:border-violet-900/30 rounded-xl justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex gap-1 items-end h-3.5">
                   <span className="w-1 h-2 bg-violet-500 rounded-full animate-pulse [animation-duration:0.6s]"></span>
@@ -481,7 +502,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
           )}
 
           {/* Large composite input core */}
-          <div className="relative flex items-end gap-2.5 bg-white dark:bg-slate-900 border border-slate-300/60 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-md focus-within:ring-1 focus-within:ring-violet-500 focus-within:border-violet-500 transition-all">
+          <div className="relative flex items-end gap-2.5 bg-white/70 dark:bg-slate-950/40 backdrop-blur-2xl border border-slate-300/40 dark:border-white/10 rounded-2xl px-4 py-3 shadow-md focus-within:ring-1 focus-within:ring-violet-500 focus-within:border-violet-500 transition-all">
             
             {/* hidden system input */}
             <input 
@@ -497,7 +518,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
               type="button"
               onClick={handleFileAttachClick}
               disabled={uploadingAttachment}
-              className={`p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer ${
+              className={`p-1.5 rounded-lg border border-slate-250/50 dark:border-white/5 hover:bg-white/20 dark:hover:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer ${
                 uploadingAttachment ? "animate-pulse brightness-50" : ""
               }`}
               title="Attach context document (max 2MB)"
@@ -523,7 +544,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
             {/* Character indicator & voice tools */}
             <div className="flex items-center gap-2">
               {/* Character counting */}
-              <span className="text-[10px] font-mono text-slate-400 font-semibold select-none pr-1">
+              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-semibold select-none pr-1">
                 {inputText.length}/1000
               </span>
 
@@ -534,7 +555,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
                 className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                   isListening
                     ? "bg-red-500 text-white border-red-500 hover:bg-red-600 animate-pulse shadow-md shadow-red-500/20"
-                    : "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750"
+                    : "bg-white/15 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-white/5 hover:bg-white/25 dark:hover:bg-white/10"
                 }`}
                 title={isListening ? "Stop speech-to-text" : "Talk via Web Speech SDK"}
               >
@@ -547,7 +568,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
                 disabled={(!inputText.trim() && !attachment) || isLoading}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center justify-center ${
                   (inputText.trim() || attachment) && !isLoading
-                    ? "bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-500/10 active:scale-95"
+                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700 shadow-md shadow-violet-500/10 active:scale-95"
                     : "bg-slate-100 dark:bg-slate-850 text-slate-300 dark:text-slate-600 border border-transparent cursor-not-allowed"
                 }`}
               >
