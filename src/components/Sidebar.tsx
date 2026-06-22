@@ -17,7 +17,9 @@ import {
   Database,
   Sliders,
   Check,
-  Activity
+  Activity,
+  LogOut,
+  KeyRound
 } from "lucide-react";
 import { ChatSession, UserProfile } from "../types";
 
@@ -39,6 +41,8 @@ interface SidebarProps {
   onProfileChange: (profile: UserProfile) => void;
   onClearAllHistory: () => void;
   onOpenAnalytics: () => void;
+  onOpenAuth: () => void;
+  onLogout: () => void;
 }
 
 export default function Sidebar({
@@ -58,7 +62,9 @@ export default function Sidebar({
   userProfile,
   onProfileChange,
   onClearAllHistory,
-  onOpenAnalytics
+  onOpenAnalytics,
+  onOpenAuth,
+  onLogout
 }: SidebarProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSettings, setShowSettings] = useState(false);
@@ -310,42 +316,80 @@ export default function Sidebar({
         </div>
 
         {/* 👤 Interactive User Profile display */}
-        <div className="flex items-center gap-2.5 p-2 bg-white/30 dark:bg-black/30 border border-slate-200/30 dark:border-white/10 rounded-xl bg-clip-padding backdrop-blur-md">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-500 text-white flex items-center justify-center text-xs font-bold shadow-sm font-mono flex-shrink-0 animate-pulse [animation-duration:5s]">
-            OB
-          </div>
-          <div className="min-w-0 flex-1">
-            {isEditingName ? (
-              <div className="flex items-center gap-1">
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleNameSave()}
-                  className="bg-slate-100 dark:bg-slate-800 border-none text-[11px] p-0.5 rounded text-slate-800 dark:text-slate-100 max-w-[100px] outline-none font-semibold focus:ring-1 focus:ring-violet-500 animate-pulse"
-                  autoFocus
-                />
-                <button 
-                  onClick={handleNameSave}
-                  className="bg-violet-600 hover:bg-violet-700 text-white p-0.5 rounded cursor-pointer"
-                >
-                  <Check className="w-3 h-3" />
-                </button>
-              </div>
-            ) : (
-              <div 
-                onClick={() => setIsEditingName(true)}
-                className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate pr-1 hover:underline cursor-pointer leading-tight flex items-center gap-1"
-                title="Click to rename"
-              >
-                {userProfile.name}
-              </div>
-            )}
-            <div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono font-bold leading-none mt-0.5 uppercase tracking-wider">
-              {userProfile.tier}
+        {userProfile.isLoggedIn ? (
+          <div className="flex items-center gap-2.5 p-2 bg-emerald-500/5 dark:bg-emerald-950/10 border border-emerald-550/20 dark:border-emerald-800/20 rounded-xl bg-clip-padding backdrop-blur-md">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-xs font-bold shadow-sm font-mono flex-shrink-0">
+              {userProfile.avatar || "OB"}
             </div>
+            <div className="min-w-0 flex-1">
+              {isEditingName ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleNameSave()}
+                    className="bg-slate-100 dark:bg-slate-800 border-none text-[11px] p-0.5 rounded text-slate-800 dark:text-slate-100 max-w-[100px] outline-none font-semibold focus:ring-1 focus:ring-violet-500 animate-pulse"
+                    autoFocus
+                  />
+                  <button 
+                    onClick={handleNameSave}
+                    className="bg-violet-600 hover:bg-violet-700 text-white p-0.5 rounded cursor-pointer"
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => setIsEditingName(true)}
+                  className="text-xs font-semibold text-slate-850 dark:text-slate-200 truncate pr-1 hover:underline cursor-pointer leading-tight flex items-center gap-1"
+                  title="Click to rename"
+                >
+                  {userProfile.name}
+                  {userProfile.username && (
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-normal">(@{userProfile.username})</span>
+                  )}
+                </div>
+              )}
+              <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-mono font-bold leading-none mt-0.5 uppercase tracking-wider flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
+                {userProfile.tier}
+              </div>
+            </div>
+
+            {/* Logout Trigger */}
+            <button
+              onClick={onLogout}
+              className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-lg cursor-pointer transition-all shrink-0"
+              title="Sign Out of Session"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
-        </div>
+        ) : (
+          <button
+            onClick={onOpenAuth}
+            className="w-full relative overflow-hidden group p-3 bg-gradient-to-r from-violet-600/10 to-indigo-600/10 hover:from-violet-600/15 hover:to-indigo-600/15 border border-violet-500/20 hover:border-violet-500/40 rounded-xl text-left cursor-pointer transition-all duration-300"
+          >
+            {/* Ambient edge light */}
+            <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-400 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+            
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-violet-600/20 text-violet-500 dark:text-violet-400 flex items-center justify-center shrink-0">
+                <KeyRound className="w-4 h-4 animate-pulse" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-violet-700 dark:text-violet-300 flex items-center gap-1">
+                  Access Secure Portal
+                  <span className="text-[7px] border border-violet-500/30 text-violet-600 dark:text-violet-400 font-mono px-1 py-0.5 rounded uppercase font-semibold leading-none self-center">Offline Auth</span>
+                </div>
+                <div className="text-[9px] text-slate-500 dark:text-slate-400 font-medium leading-none mt-0.5">
+                  Sign in or create account to sync history
+                </div>
+              </div>
+            </div>
+          </button>
+        )}
       </div>
     </aside>
   );

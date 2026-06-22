@@ -58,4 +58,7 @@ export interface UserProfile {
   avatar: string;
   tier: "Free Member" | "Pro" | "SaaS Admin";
   joined: string;
+  id?: string;
+  username?: string;
+  isLoggedIn?: boolean;
 }

@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import MainChat from "./components/MainChat";
 import AnalyticsPanel from "./components/AnalyticsPanel";
+import AuthModal from "./components/AuthModal";
 import { ChatSession, Message, OrbitAnalytics, UserProfile } from "./types";
 import { INITIAL_CHATS } from "./data";
 
@@ -14,12 +15,39 @@ export default function App() {
   // Theme state
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("orbit_theme");
-    return saved ? saved === "dark" : true; // Default to dark cosmic mode
+    return saved ? saved === "dark" : true; // Default to cosmic dark mode
+  });
+
+  // User Profile
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem("orbit_profile");
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return {
+      name: "Space Explorer",
+      avatar: "OB",
+      tier: "SaaS Admin",
+      joined: "June 2026",
+      isLoggedIn: false
+    };
   });
 
   // Conversations sessions state
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    const saved = localStorage.getItem("orbit_sessions");
+    const defaultProfile = localStorage.getItem("orbit_profile");
+    let username = "";
+    if (defaultProfile) {
+      try {
+        const parsed = JSON.parse(defaultProfile);
+        if (parsed.isLoggedIn && parsed.username) {
+          username = parsed.username;
+        }
+      } catch {}
+    }
+
+    const key = username ? ("orbit_sessions_" + username) : "orbit_sessions";
+    const saved = localStorage.getItem(key);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -37,6 +65,9 @@ export default function App() {
     }
     return sessions[0]?.id || "welcome-orbit";
   });
+
+  // Authentication Dialog control
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Global settings parameters
   const [systemPrompt, setSystemPrompt] = useState<string>(() => {
@@ -66,20 +97,6 @@ export default function App() {
     localStorage.setItem("orbit_web_search", String(enabled));
   };
 
-  // User Profile
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem("orbit_profile");
-    if (saved) {
-      try { return JSON.parse(saved); } catch {}
-    }
-    return {
-      name: "Space Explorer",
-      avatar: "OB",
-      tier: "SaaS Admin",
-      joined: "June 2026"
-    };
-  });
-
   // Loading animation states
   const [isLoading, setIsLoading] = useState(false);
 
@@ -100,8 +117,74 @@ export default function App() {
 
   // Sync state changes to local storage
   useEffect(() => {
-    localStorage.setItem("orbit_sessions", JSON.stringify(sessions));
-  }, [sessions]);
+    if (userProfile.isLoggedIn && userProfile.username) {
+      const userKey = "orbit_sessions_" + userProfile.username;
+      localStorage.setItem(userKey, JSON.stringify(sessions));
+      
+      // Save user history on full-stack server
+      fetch("/api/auth/save-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: userProfile.username, sessions })
+      }).catch(e => console.warn("Failed to sync sessions to server", e));
+    } else {
+      localStorage.setItem("orbit_sessions", JSON.stringify(sessions));
+    }
+  }, [sessions, userProfile.isLoggedIn, userProfile.username]);
+
+  // Auth Modal Handlers
+  const handleAuthSuccess = (user: UserProfile, serverSessions?: any[]) => {
+    const freshProfile = { ...user, isLoggedIn: true };
+    setUserProfile(freshProfile);
+    localStorage.setItem("orbit_profile", JSON.stringify(freshProfile));
+
+    // Resolve chats
+    let loadedChats = [];
+    if (user.username) {
+      const userKey = "orbit_sessions_" + user.username;
+      const savedObj = localStorage.getItem(userKey);
+      if (savedObj) {
+        try {
+          loadedChats = JSON.parse(savedObj);
+        } catch {}
+      } else if (serverSessions && serverSessions.length > 0) {
+        loadedChats = serverSessions;
+      }
+    }
+
+    if (loadedChats.length === 0) {
+      loadedChats = INITIAL_CHATS;
+    }
+
+    setSessions(loadedChats);
+    const savedActive = loadedChats[0]?.id || "welcome-orbit";
+    setActiveSessionId(savedActive);
+    setIsAuthModalOpen(false);
+  };
+
+  const handleLogout = () => {
+    const guestProfile: UserProfile = {
+      name: "Space Explorer",
+      avatar: "OB",
+      tier: "SaaS Admin",
+      joined: "June 2026",
+      isLoggedIn: false
+    };
+    setUserProfile(guestProfile);
+    localStorage.setItem("orbit_profile", JSON.stringify(guestProfile));
+
+    // Load generic guest sessions
+    const saved = localStorage.getItem("orbit_sessions");
+    let guestChats = INITIAL_CHATS;
+    if (saved) {
+      try {
+        guestChats = JSON.parse(saved);
+      } catch {}
+    }
+
+    setSessions(guestChats);
+    setActiveSessionId(guestChats[0]?.id || "welcome-orbit");
+  };
 
   useEffect(() => {
     localStorage.setItem("orbit_active_id", activeSessionId);
@@ -364,6 +447,8 @@ export default function App() {
         onProfileChange={setUserProfile}
         onClearAllHistory={handleClearAllHistory}
         onOpenAnalytics={handleOpenAnalytics}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* 🚀 Central Conversational Stage */}
@@ -389,6 +474,13 @@ export default function App() {
           analyticsData={cachedAnalytics}
         />
       )}
+
+      {/* 🔐 Modular Authentication Gateway */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
 
     </div>
   );

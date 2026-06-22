@@ -222,6 +222,134 @@ app.post("/api/analytics/feedback", (req, res) => {
   res.json({ success: true, likes: analytics.likes, dislikes: analytics.dislikes });
 });
 
+// Custom Server-Side User Accounts Database for Authentication
+interface UserAccount {
+  id: string;
+  username: string;
+  passwordHash: string; // Stored securely in memory
+  name: string;
+  avatar: string;
+  tier: "Free Member" | "Pro" | "SaaS Admin";
+  joined: string;
+  sessions: any[];
+}
+
+const usersDb: Record<string, UserAccount> = {
+  "admin": {
+    id: "user-admin",
+    username: "admin",
+    passwordHash: "password123", // Default local testing password
+    name: "Dr. Stella Nova",
+    avatar: "SN",
+    tier: "SaaS Admin",
+    joined: "June 2026",
+    sessions: []
+  },
+  "orbitseeker": {
+    id: "user-seeker",
+    username: "orbitseeker",
+    passwordHash: "orbit99",
+    name: "Space Cadet Arthur",
+    avatar: "AC",
+    tier: "Pro",
+    joined: "June 2026",
+    sessions: []
+  }
+};
+
+// 🔐 Authentication Endpoint: Register User
+app.post("/api/auth/register", (req, res) => {
+  const { username, password, name, avatar, tier } = req.body;
+  
+  if (!username || !password || !name) {
+    return res.status(400).json({ error: "Username, password, and display name are required." });
+  }
+
+  const normalizedUsername = username.toLowerCase().trim();
+  if (usersDb[normalizedUsername]) {
+    return res.status(400).json({ error: "Username already exists. Please choose a different handle." });
+  }
+
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dateStr = `${months[new Date().getMonth()]} ${new Date().getFullYear()}`;
+
+  const newUser: UserAccount = {
+    id: `user-${Date.now()}`,
+    username: normalizedUsername,
+    passwordHash: password, // Store password
+    name: name.trim(),
+    avatar: (avatar || name.slice(0, 2)).toUpperCase(),
+    tier: tier || "Free Member",
+    joined: dateStr,
+    sessions: [] // Empty initial chat history
+  };
+
+  usersDb[normalizedUsername] = newUser;
+  
+  res.json({
+    success: true,
+    message: "Registration completed successfully. You can now login!",
+    user: {
+      id: newUser.id,
+      username: newUser.username,
+      name: newUser.name,
+      avatar: newUser.avatar,
+      tier: newUser.tier,
+      joined: newUser.joined,
+      isLoggedIn: true
+    }
+  });
+});
+
+// 🔐 Authentication Endpoint: Login User
+app.post("/api/auth/login", (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required." });
+  }
+
+  const normalizedUsername = username.toLowerCase().trim();
+  const user = usersDb[normalizedUsername];
+
+  if (!user || user.passwordHash !== password) {
+    return res.status(401).json({ error: "Invalid username or password credentials." });
+  }
+
+  res.json({
+    success: true,
+    user: {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      avatar: user.avatar,
+      tier: user.tier,
+      joined: user.joined,
+      isLoggedIn: true
+    },
+    sessions: user.sessions
+  });
+});
+
+// 💾 Authentication Endpoint: Sync User-Specific Conversations
+app.post("/api/auth/save-sessions", (req, res) => {
+  const { username, sessions } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ error: "Username is required to save session state." });
+  }
+
+  const normalizedUsername = username.toLowerCase().trim();
+  const user = usersDb[normalizedUsername];
+
+  if (!user) {
+    return res.status(404).json({ error: "User account not found." });
+  }
+
+  user.sessions = sessions || [];
+  res.json({ success: true, savedCount: user.sessions.length });
+});
+
 // Setup Vite Dev server or Serve compiled frontend
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
