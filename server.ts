@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 dotenv.config();
 
@@ -56,9 +56,13 @@ app.get("/api/analytics", (req, res) => {
 
 // 🤖 Chat processing POST API
 app.post("/api/chat", async (req: express.Request, res: express.Response): Promise<void> => {
-  try {
-    const { message, history = [], systemInstruction, temperature = 0.7, model = "gemini-3.5-flash", webSearchEnabled = true } = req.body;
+  const { message, history = [], systemInstruction, temperature = 0.7, model = "gemini-3.5-flash", webSearchEnabled = true } = req.body || {};
+  
+  // Validate request model safely
+  const allowedModels = ["gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"];
+  const targetModel = allowedModels.includes(model) ? model : "gemini-3.5-flash";
 
+  try {
     if (!message || typeof message !== "string") {
       res.status(400).json({ error: "Message content is required" });
       return;
@@ -66,10 +70,6 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
 
     analytics.messagesProcessed++;
     trackKeywords(message);
-
-    // Validate request model safely
-    const allowedModels = ["gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"];
-    const targetModel = allowedModels.includes(model) ? model : "gemini-3.5-flash";
 
     // 1. Check rule-based engine first (only for normal simple model, skip for specific tasks)
     const norm = message.toLowerCase().trim();
@@ -171,6 +171,13 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
       chatConfig.tools = [{ googleSearch: {} }];
     }
 
+    // Configure High Thinking mode only for the 3.1 Pro Preview model
+    if (targetModel === "gemini-3.1-pro-preview") {
+      chatConfig.thinkingConfig = {
+        thinkingLevel: ThinkingLevel.HIGH,
+      };
+    }
+
     const response = await ai.models.generateContent({
       model: targetModel,
       contents,
@@ -190,9 +197,36 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
 
   } catch (error: any) {
     console.error("Gemini API error:", error);
+    
+    const errString = error.message || String(error);
+    const isQuotaExceeded = errString.includes("429") || 
+                            errString.includes("RESOURCE_EXHAUSTED") || 
+                            errString.toLowerCase().includes("quota") ||
+                            errString.toLowerCase().includes("exhausted");
+                            
+    const isPermissionDenied = errString.includes("403") || 
+                               errString.includes("PERMISSION_DENIED") || 
+                               errString.toLowerCase().includes("forbidden") ||
+                               errString.toLowerCase().includes("invalid_api_key") ||
+                               errString.toLowerCase().includes("invalid api key");
+
+    const isNotFound = errString.includes("404") ||
+                       errString.includes("NOT_FOUND") ||
+                       errString.toLowerCase().includes("not found");
+
+    let friendlyDetails = error.message || String(error);
+    
+    if (isQuotaExceeded) {
+      friendlyDetails = `You exceeded your current Gemini API quota or hit rate limits.\n\n**How to fix this and unlock unlimited queries:**\n\n1. Go to the **Settings > Secrets** panel in the AI Studio editor interface on your right/left.\n2. Paste or select a **billing-enabled (paid tier) API key** to gain increased quota limits.\n3. Alternatively, use the dropdown model menu next to the chat sidebar to switch to a lighter model (like **Gemini 3.5 Flash** or **Gemini 3.1 Flash Lite**) which consumes significantly less quota!`;
+    } else if (isPermissionDenied) {
+      friendlyDetails = `The API key used was denied permission or is invalid.\n\n**How to fix:**\n\n1. Open the **Settings > Secrets** panel in your editor environment.\n2. Set a valid, active \`GEMINI_API_KEY\` to re-engage the model.`;
+    } else if (isNotFound) {
+      friendlyDetails = `The model \`${targetModel}\` was not found or is currently unsupported in this region configuration.\n\n**How to fix:**\n\nChoose an active model such as **Gemini 3.5 Flash** or **Gemini 3.1 pro-preview** in the model selector.`;
+    }
+
     res.status(500).json({
-      error: "Failed to fetch response from Gemini model",
-      details: error.message || String(error),
+      error: isQuotaExceeded ? "API Quota/Rate Limit Exhausted" : "Failed to fetch response from Gemini model",
+      details: friendlyDetails,
     });
   }
 });
