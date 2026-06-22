@@ -52,6 +52,10 @@ export default function App() {
     return localStorage.getItem("orbit_autoplay_tts") === "true";
   });
 
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    return localStorage.getItem("orbit_selected_model") || "gemini-3.5-flash";
+  });
+
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem("orbit_profile");
@@ -104,6 +108,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("orbit_autoplay_tts", isAutoplayTtsEnabled.toString());
   }, [isAutoplayTtsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem("orbit_selected_model", selectedModel);
+  }, [selectedModel]);
 
   useEffect(() => {
     localStorage.setItem("orbit_profile", JSON.stringify(userProfile));
@@ -167,7 +175,7 @@ export default function App() {
   };
 
   // Dynamic Send Message controller
-  const handleSendMessage = async (text: string, attachment?: any) => {
+  const handleSendMessage = async (text: string, attachment?: any, forcedModel?: string) => {
     if (!text && !attachment) return;
 
     // 1. Construct user message entry
@@ -226,7 +234,8 @@ export default function App() {
           message: text + (attachment?.content ? `\n\n[USER ATTACHED DISK FILE Context: "${attachment.name}"]: \n${attachment.content}` : ""),
           history: cleanHistory,
           systemInstruction: systemPrompt,
-          temperature: temperature
+          temperature: temperature,
+          model: forcedModel || selectedModel
         })
       });
 
@@ -242,6 +251,7 @@ export default function App() {
         content: replyData.text,
         timestamp: new Date().toISOString(),
         mode: replyData.mode || "generative-ai",
+        modelUsed: replyData.modelUsed,
         tokensCount: replyData.tokensCount || 0
       };
 
@@ -326,6 +336,8 @@ export default function App() {
           isLoading={isLoading}
           onSelectPrompt={handleSelectPrompt}
           isAutoplayTtsEnabled={isAutoplayTtsEnabled}
+          selectedModel={selectedModel}
+          onSelectedModelChange={setSelectedModel}
         />
       </main>
 

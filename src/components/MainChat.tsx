@@ -21,7 +21,13 @@ import {
   X,
   FileCheck,
   Check,
-  Copy
+  Copy,
+  Cpu,
+  Zap,
+  Brain,
+  ChevronDown,
+  Languages,
+  Wand2
 } from "lucide-react";
 import { ChatSession, Message } from "../types";
 import { SUGGESTED_PROMPTS } from "../data";
@@ -29,17 +35,32 @@ import MarkdownRenderer from "./MarkdownRenderer";
 
 interface MainChatProps {
   session: ChatSession | null;
-  onSendMessage: (text: string, attachment?: any) => void;
+  onSendMessage: (text: string, attachment?: any, forcedModel?: string) => void;
   isLoading: boolean;
   onSelectPrompt: (promptText: string) => void;
   isAutoplayTtsEnabled: boolean;
+  selectedModel: string;
+  onSelectedModelChange: (model: string) => void;
 }
 
-export default function MainChat({ session, onSendMessage, isLoading, onSelectPrompt, isAutoplayTtsEnabled }: MainChatProps) {
+export default function MainChat({ 
+  session, 
+  onSendMessage, 
+  isLoading, 
+  onSelectPrompt, 
+  isAutoplayTtsEnabled,
+  selectedModel,
+  onSelectedModelChange
+}: MainChatProps) {
   const [inputText, setInputText] = useState("");
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  
+  // Model Selector Dropdown State
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  // Message target for micro-dropdown Gemini Actions
+  const [activeActionMsgId, setActiveActionMsgId] = useState<string | null>(null);
 
   // Attachment simulated states
   const [attachment, setAttachment] = useState<{ name: string; type: string; size: string; content?: string } | null>(null);
@@ -170,6 +191,43 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
     navigator.clipboard.writeText(msg.content);
     setCopiedId(msg.id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const executeGeminiAction = (msg: Message, actionKey: string) => {
+    setActiveActionMsgId(null);
+    let actionPrompt = "";
+    let actionModel = "gemini-3.5-flash";
+
+    switch (actionKey) {
+      case "summarize":
+        actionPrompt = `Analyze the following content and provide a dynamic, fast summary with exactly 3 bulleted key takeaways and any next-step action items:\n\n"""\n${msg.content}\n"""`;
+        actionModel = "gemini-3.1-flash-lite";
+        break;
+      case "rewrite":
+        actionPrompt = `Proofread and rewrite the following in a highly polished, confident, professional and clear business tone:\n\n"""\n${msg.content}\n"""`;
+        actionModel = "gemini-3.5-flash";
+        break;
+      case "translate_es":
+        actionPrompt = `Translate the following text into standard, natural, and fluid Spanish (Español):\n\n"""\n${msg.content}\n"""`;
+        actionModel = "gemini-3.5-flash";
+        break;
+      case "translate_ja":
+        actionPrompt = `Translate the following text into elegant, natural, and polite Japanese (日本語):\n\n"""\n${msg.content}\n"""`;
+        actionModel = "gemini-3.5-flash";
+        break;
+      case "explain_code":
+        actionPrompt = `Analyze the code snippet below. Explain its structure, logic, complexity, and point out potential improvements or bugs:\n\n"""\n${msg.content}\n"""`;
+        actionModel = "gemini-3.1-pro-preview";
+        break;
+      case "optimize_code":
+        actionPrompt = `Optimize and refactor the code snippet below. Return the improved version along with a brief breakdown of your architectural enhancements:\n\n"""\n${msg.content}\n"""`;
+        actionModel = "gemini-3.1-pro-preview";
+        break;
+      default:
+        return;
+    }
+
+    onSendMessage(actionPrompt, undefined, actionModel);
   };
 
   const handleSend = (e: React.FormEvent) => {
@@ -373,26 +431,141 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
                     <MarkdownRenderer content={msg.content} />
 
                     {/* Meta actions bar panel for message */}
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/55 pt-3 text-[10px] text-slate-400 dark:text-slate-500 select-none">
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/55 pt-3 text-[10px] text-slate-400 dark:text-slate-500 select-none relative">
                       <div className="flex items-center gap-2">
                         <span>{msg.timestamp.split("T")?.[1]?.slice(0, 5) || "Now"}</span>
                         
-                        {/* Display response tag */}
-                        {!isUser && msg.mode && (
-                          <span className={`px-2 py-0.5 rounded-md text-[9px] uppercase font-mono border ${
-                            msg.mode === "generative-ai" 
+                        {/* Display custom model used tag on responses */}
+                        {!isUser && (msg.modelUsed || msg.mode) && (
+                          <span className={`px-2 py-0.5 rounded-md text-[9px] uppercase font-mono border tracking-wider font-bold ${
+                            msg.modelUsed === "gemini-3.1-pro-preview"
+                              ? "bg-indigo-100/60 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-900/70"
+                              : msg.modelUsed === "gemini-3.1-flash-lite"
+                              ? "bg-teal-100/60 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400 border-teal-200/60 dark:border-teal-900/70"
+                              : msg.modelUsed === "gemini-3.5-flash"
+                              ? "bg-violet-100/60 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400 border-violet-200/60 dark:border-violet-900/70"
+                              : msg.mode === "generative-ai"
                               ? "bg-violet-100/40 text-violet-600 dark:bg-violet-950/30 dark:text-violet-400 border-violet-200/40 dark:border-violet-900/60"
                               : msg.mode === "rule-based"
                               ? "bg-cyan-100/40 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400 border-cyan-200/40 dark:border-cyan-900/60"
-                              : "bg-amber-100/40 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/60"
+                              : "bg-slate-100/60 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400 border-slate-200 dark:border-slate-800"
                           }`}>
-                            {msg.mode}
+                            {msg.modelUsed === "gemini-3.1-pro-preview"
+                              ? "Gemini 3.1 Pro"
+                              : msg.modelUsed === "gemini-3.1-flash-lite"
+                              ? "Gemini Lite"
+                              : msg.modelUsed === "gemini-3.5-flash"
+                              ? "Gemini 3.5 Flash"
+                              : msg.modelUsed || msg.mode}
                           </span>
                         )}
                       </div>
 
                       {/* Utility buttons panel */}
                       <div className="flex items-center gap-2">
+                        {/* Gemini Actions menu trigger */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setActiveActionMsgId(activeActionMsgId === msg.id ? null : msg.id)}
+                            className={`p-1 rounded-md transition-all cursor-pointer flex items-center gap-1 border ${
+                              activeActionMsgId === msg.id
+                                ? "bg-violet-600/95 text-white border-violet-600"
+                                : "text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-slate-100 dark:hover:bg-slate-900 border-transparent hover:border-slate-200/40 dark:hover:border-slate-800/60"
+                            }`}
+                            title="Gemini Intelligence Actions"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span className="text-[9px] font-mono font-semibold tracking-wide uppercase pr-0.5">Actions</span>
+                          </button>
+
+                          {/* Floating Micro drop down actions options container */}
+                          {activeActionMsgId === msg.id && (
+                            <div className="absolute bottom-7 right-0 min-w-[210px] p-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                              <div className="text-[10px] font-mono tracking-wider font-bold text-slate-400 dark:text-slate-500 uppercase px-2 py-1.5 border-b border-slate-100 dark:border-slate-900 mb-1 flex items-center justify-between">
+                                <span>Gemini Operations</span>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); setActiveActionMsgId(null); }} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              <div className="space-y-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => executeGeminiAction(msg, "summarize")}
+                                  className="w-full text-left px-2 py-1.5 hover:bg-teal-50 dark:hover:bg-teal-950/20 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-2 transition-colors cursor-pointer text-[11px]"
+                                >
+                                  <Zap className="w-3.5 h-3.5 text-teal-500" />
+                                  <div className="flex-1 truncate">
+                                    <span className="font-semibold block text-slate-800 dark:text-slate-200">Summarize Points</span>
+                                    <span className="text-[9px] text-slate-400 block font-mono">Gemini Flash-Lite (Fast)</span>
+                                  </div>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => executeGeminiAction(msg, "rewrite")}
+                                  className="w-full text-left px-2 py-1.5 hover:bg-violet-50 dark:hover:bg-violet-950/20 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-2 transition-colors cursor-pointer text-[11px]"
+                                >
+                                  <Wand2 className="w-3.5 h-3.5 text-violet-500" />
+                                  <div className="flex-1 truncate">
+                                    <span className="font-semibold block text-slate-800 dark:text-slate-200">Professional Rewrite</span>
+                                    <span className="text-[9px] text-slate-400 block font-mono">Gemini 3.5 Flash (General)</span>
+                                  </div>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => executeGeminiAction(msg, "translate_es")}
+                                  className="w-full text-left px-2 py-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-2 transition-colors cursor-pointer text-[11px]"
+                                >
+                                  <Languages className="w-3.5 h-3.5 text-indigo-500" />
+                                  <div className="flex-1 truncate">
+                                    <span className="font-semibold block text-slate-800 dark:text-slate-200">Translate to Spanish</span>
+                                    <span className="text-[9px] text-slate-400 block font-mono">Gemini 3.5 Flash</span>
+                                  </div>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => executeGeminiAction(msg, "translate_ja")}
+                                  className="w-full text-left px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950/20 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-2 transition-colors cursor-pointer text-[11px]"
+                                >
+                                  <Languages className="w-3.5 h-3.5 text-blue-500" />
+                                  <div className="flex-1 truncate">
+                                    <span className="font-semibold block text-slate-800 dark:text-slate-200">Translate to Japanese</span>
+                                    <span className="text-[9px] text-slate-400 block font-mono">Gemini 3.5 Flash</span>
+                                  </div>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => executeGeminiAction(msg, "explain_code")}
+                                  className="w-full text-left px-2 py-1.5 hover:bg-pink-50 dark:hover:bg-pink-950/20 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-2 transition-colors cursor-pointer text-[11px]"
+                                >
+                                  <Code2 className="w-3.5 h-3.5 text-pink-500" />
+                                  <div className="flex-1 truncate">
+                                    <span className="font-semibold block text-slate-800 dark:text-slate-200">Explain Code Logic</span>
+                                    <span className="text-[9px] text-slate-400 block font-mono">Gemini 3.1 Pro (Heavy)</span>
+                                  </div>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => executeGeminiAction(msg, "optimize_code")}
+                                  className="w-full text-left px-2 py-1.5 hover:bg-orange-50 dark:hover:bg-orange-950/20 text-slate-700 dark:text-slate-300 rounded-lg flex items-center gap-2 transition-colors cursor-pointer text-[11px]"
+                                >
+                                  <Cpu className="w-3.5 h-3.5 text-orange-500" />
+                                  <div className="flex-1 truncate">
+                                    <span className="font-semibold block text-slate-800 dark:text-slate-200">Refactor & Optimize</span>
+                                    <span className="text-[9px] text-slate-400 block font-mono">Gemini 3.1 Pro (Heavy)</span>
+                                  </div>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Copy button */}
                         <button
                           type="button"
@@ -543,6 +716,96 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
             >
               <Paperclip className="w-4 h-4" />
             </button>
+
+            {/* Gemini Model Intelligence Picker Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                className={`p-1.5 rounded-lg border flex items-center gap-1 hover:bg-slate-155 dark:hover:bg-slate-900 transition-colors cursor-pointer text-xs font-semibold ${
+                  selectedModel === "gemini-3.1-pro-preview"
+                    ? "bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border-indigo-250/20 dark:border-indigo-900/40"
+                    : selectedModel === "gemini-3.1-flash-lite"
+                    ? "bg-teal-50/50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 border-teal-250/20 dark:border-teal-900/40"
+                    : "bg-violet-50/50 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 border-violet-250/20 dark:border-violet-900/40"
+                }`}
+                title="Choose Gemini Intelligence Level"
+              >
+                {selectedModel === "gemini-3.1-pro-preview" ? (
+                  <Brain className="w-3.5 h-3.5" />
+                ) : selectedModel === "gemini-3.1-flash-lite" ? (
+                  <Zap className="w-3.5 h-3.5" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden sm:inline font-mono text-[10px] tracking-tight uppercase">
+                  {selectedModel === "gemini-3.1-pro-preview"
+                    ? "Pro"
+                    : selectedModel === "gemini-3.1-flash-lite"
+                    ? "Lite"
+                    : "Flash"}
+                </span>
+                <ChevronDown className="w-3 h-3 opacity-60" />
+              </button>
+
+              {isModelDropdownOpen && (
+                <div className="absolute bottom-9 left-0 min-w-[210px] p-1.5 bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-850 rounded-xl shadow-2xl z-50">
+                  <div className="text-[9px] font-mono tracking-wider font-bold text-slate-400 dark:text-slate-500 uppercase px-2 py-1 border-b border-slate-100 dark:border-slate-900 mb-1">
+                    Select Gemini Level
+                  </div>
+                  
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => { onSelectedModelChange("gemini-3.1-flash-lite"); setIsModelDropdownOpen(false); }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition-colors text-[11px] ${
+                        selectedModel === "gemini-3.1-flash-lite"
+                          ? "bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold animate-pulse"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      <Zap className="w-3.5 h-3.5 text-teal-500" />
+                      <div>
+                        <span className="block">Gemini 3.1 Flash-Lite</span>
+                        <span className="text-[8.5px] opacity-70 block">Fastest speed • Instant responses</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => { onSelectedModelChange("gemini-3.5-flash"); setIsModelDropdownOpen(false); }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition-colors text-[11px] ${
+                        selectedModel === "gemini-3.5-flash"
+                          ? "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 font-bold"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-violet-500" />
+                      <div>
+                        <span className="block">Gemini 3.5 Flash (General)</span>
+                        <span className="text-[8.5px] opacity-70 block">Balanced speed & dynamic logic</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => { onSelectedModelChange("gemini-3.1-pro-preview"); setIsModelDropdownOpen(false); }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer transition-colors text-[11px] ${
+                        selectedModel === "gemini-3.1-pro-preview"
+                          ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      <Brain className="w-3.5 h-3.5 text-indigo-500" />
+                      <div>
+                        <span className="block">Gemini 3.1 Pro (Heavy)</span>
+                        <span className="text-[8.5px] opacity-70 block">Deepest reasoning • Best for code</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Textarea */}
             <textarea

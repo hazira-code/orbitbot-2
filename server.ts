@@ -55,7 +55,7 @@ app.get("/api/analytics", (req, res) => {
 // 🤖 Chat processing POST API
 app.post("/api/chat", async (req: express.Request, res: express.Response): Promise<void> => {
   try {
-    const { message, history = [], systemInstruction, temperature = 0.7 } = req.body;
+    const { message, history = [], systemInstruction, temperature = 0.7, model = "gemini-3.5-flash" } = req.body;
 
     if (!message || typeof message !== "string") {
       res.status(400).json({ error: "Message content is required" });
@@ -65,22 +65,26 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
     analytics.messagesProcessed++;
     trackKeywords(message);
 
-    // 1. Check rule-based engine first
+    // Validate request model safely
+    const allowedModels = ["gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"];
+    const targetModel = allowedModels.includes(model) ? model : "gemini-3.5-flash";
+
+    // 1. Check rule-based engine first (only for normal simple model, skip for specific tasks)
     const norm = message.toLowerCase().trim();
     let ruleResponse: string | null = null;
 
-    if (norm.includes("who are you") || norm.includes("your name") || norm.includes("what is orbitbot") || norm.includes("what is your name")) {
+    if (model === "gemini-3.5-flash" && (norm.includes("who are you") || norm.includes("your name") || norm.includes("what is orbitbot") || norm.includes("what is your name"))) {
       ruleResponse = "I am **OrbitBot**, a futuristic conversational assistant designed to help you think, draft, code, and explore. I am powered by custom micro-services and the Gemini LLM engine.";
-    } else if (norm.includes("who created you") || norm.includes("made you") || norm.includes("creator")) {
+    } else if (model === "gemini-3.5-flash" && (norm.includes("who created you") || norm.includes("made you") || norm.includes("creator"))) {
       ruleResponse = "I was developed with deep spatial engineering principles utilizing React, Tailwind CSS, and Google DeepMind's Gemini architecture.";
-    } else if (norm.includes("features") || norm.includes("capabilities") || norm.includes("what can you do")) {
+    } else if (model === "gemini-3.5-flash" && (norm.includes("features") || norm.includes("capabilities") || norm.includes("what can you do"))) {
       ruleResponse = "Here are my core capabilities:\n\n" +
         "- 🤖 **Dual Interaction Routing**: Combines hyper-fast rule matching with dynamic Gemini AI reasoning.\n" +
         "- 🎙️ **Vocal Speech-to-Text**: Dictation via browser voice capture using a glowing orbital radial waveform.\n" +
         "- 🔊 **Custom TTS Audio**: Generous localized Text-to-Speech playback available on all response cards.\n" +
         "- 📊 **Full-Stack Analytics**: Real-time metrics tracking conversation length, query density, and word frequency.\n" +
         "- ✨ **Celestial Aesthetics**: Fluid, high-contrast dark space design, ambient stars, and flawless layout transitions.";
-    } else if (norm.includes("help") || norm.includes("how to use") || norm.includes("guide")) {
+    } else if (model === "gemini-3.5-flash" && (norm.includes("help") || norm.includes("how to use") || norm.includes("guide"))) {
       ruleResponse = "Welcome! Interaction is simple:\n\n" +
         "1. **Chat**: Enter your queries below or use the suggested prompts.\n" +
         "2. **Speak**: Tap the **Microphone** button to dictate via local speech recognition.\n" +
@@ -93,6 +97,7 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
       res.json({
         text: ruleResponse,
         mode: "rule-based",
+        modelUsed: "local-rules",
         tokensCount: Math.ceil(ruleResponse.split(/\s+/).length * 1.3),
       });
       return;
@@ -103,21 +108,22 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
     if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
       // Graceful fallback response when key is missing so the app is always functional
       analytics.queriesByMode.rules++;
-      const fallbackMsg = "### Welcome to OrbitBot! \n\n" +
-        "I am running in **Development Offline Fallback Mode** because your `GEMINI_API_KEY` is not set.\n\n" +
-        "#### How to activate my fully dynamic Gemini AI brain:\n" +
-        "1. Open the **Settings > Secrets** panel in the AI Studio UI on your right/left.\n" +
-        "2. Set your custom `GEMINI_API_KEY` value.\n" +
-        "3. Restart the server or continue chatting! I'll instantly utilize the LLM.\n\n" +
-        "#### Meanwhile, you can test my core layout capabilities:\n" +
-        "- Dictate text manually via the microphone button.\n" +
-        "- Toggle background light/dark modes under system parameters.\n" +
-        "- Trigger analytics to view queries and average counts.\n" +
-        "- Ask me generic platform questions (e.g. asking *'What are your capabilities?'* or *'Who are you?'*) which trigger my local database responses!";
+      const fallbackMsg = `### Welcome to OrbitBot! \n\n` +
+        `I am running in **Development Offline Fallback Mode** because your \`GEMINI_API_KEY\` is not set.\n\n` +
+        `#### How to activate my fully dynamic Gemini AI brain (requested model: \`${targetModel}\`):\n` +
+        `1. Open the **Settings > Secrets** panel in the AI Studio UI on your right/left.\n` +
+        `2. Set your custom \`GEMINI_API_KEY\` value.\n` +
+        `3. Restart the server or continue chatting! I'll instantly utilize the LLM.\n\n` +
+        `#### Meanwhile, you can test my core layout capabilities:\n` +
+        `- Dictate text manually via the microphone button.\n` +
+        `- Toggle background light/dark modes under system parameters.\n` +
+        `- Trigger analytics to view queries and average counts.\n` +
+        `- Ask me generic platform questions (e.g. asking *'What are your capabilities?'* or *'Who are you?'*) which trigger my local database responses!`;
       
       res.json({
         text: fallbackMsg,
         mode: "offline-fallback",
+        modelUsed: "local-fallback",
         tokensCount: 0,
       });
       return;
@@ -127,8 +133,6 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
     analytics.queriesByMode.ai++;
 
     // Prepare contents array matching the expected developer layout
-    // Format history entries carefully:
-    // User role is 'user', Bot role is 'model' in @google/genai
     const contents = [];
     
     // Process preceding history correctly
@@ -157,7 +161,7 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
 
     // Generate output content
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: targetModel,
       contents,
       config: {
         systemInstruction: systemInstruction || "You are OrbitBot, a helpful and knowledgeable celestial AI assistant. Provide extremely clean, visually organized answers with Markdown support.",
@@ -170,6 +174,7 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
     res.json({
       text: replyText,
       mode: "generative-ai",
+      modelUsed: targetModel,
       tokensCount: Math.ceil(replyText.split(/\s+/).length * 1.3),
     });
 

@@ -10,6 +10,7 @@ export interface Message {
   timestamp: string;
   tokensCount?: number;
   mode?: "rule-based" | "generative-ai" | "offline-fallback";
+  modelUsed?: string;
   isSpokenText?: boolean;
   attachment?: {
     name: string;
