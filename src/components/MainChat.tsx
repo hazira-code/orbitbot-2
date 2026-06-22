@@ -27,7 +27,9 @@ import {
   Brain,
   ChevronDown,
   Languages,
-  Wand2
+  Wand2,
+  ThumbsUp,
+  ThumbsDown
 } from "lucide-react";
 import { ChatSession, Message } from "../types";
 import { SUGGESTED_PROMPTS } from "../data";
@@ -41,6 +43,7 @@ interface MainChatProps {
   isAutoplayTtsEnabled: boolean;
   selectedModel: string;
   onSelectedModelChange: (model: string) => void;
+  onMessageFeedback?: (messageId: string, feedback: "like" | "dislike" | null) => void;
 }
 
 export default function MainChat({ 
@@ -50,7 +53,8 @@ export default function MainChat({
   onSelectPrompt, 
   isAutoplayTtsEnabled,
   selectedModel,
-  onSelectedModelChange
+  onSelectedModelChange,
+  onMessageFeedback
 }: MainChatProps) {
   const [inputText, setInputText] = useState("");
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
@@ -411,7 +415,7 @@ export default function MainChat({
                   )}
 
                   {/* Message Bubble box */}
-                  <div className={`max-w-[82%] p-5 rounded-2xl border flex flex-col justify-between shadow-sm relative backdrop-blur-sm ${
+                  <div className={`max-w-[82%] p-5 rounded-2xl border flex flex-col justify-between shadow-sm relative backdrop-blur-sm group ${
                     isUser
                       ? "bg-white/70 dark:bg-white/15 border-slate-200/50 dark:border-white/10 text-slate-800 dark:text-slate-100 rounded-tr-none"
                       : "bg-white/45 dark:bg-white/5 border-slate-200/45 dark:border-white/10 rounded-tl-none text-slate-800 dark:text-slate-200"
@@ -565,6 +569,43 @@ export default function MainChat({
                             </div>
                           )}
                         </div>
+
+                        {/* Feedbacks Panel with Hover Reveal */}
+                        {!isUser && (
+                          <div className={`flex items-center gap-1 border-r border-slate-200/50 dark:border-slate-800/50 pr-2 mr-1 transition-all duration-200 ${
+                            msg.feedback ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                          }`} id={`feedback-panel-${msg.id}`}>
+                            {/* Like Button */}
+                            <button
+                              type="button"
+                              onClick={() => onMessageFeedback?.(msg.id, msg.feedback === "like" ? null : "like")}
+                              className={`p-1 rounded-md transition-all cursor-pointer ${
+                                msg.feedback === "like"
+                                  ? "text-emerald-500 bg-emerald-100/50 dark:bg-emerald-950/30 font-bold border border-emerald-500/20"
+                                  : "text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent hover:scale-110"
+                              }`}
+                              title="Like response"
+                              id={`feedback-like-${msg.id}`}
+                            >
+                              <ThumbsUp className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Dislike Button */}
+                            <button
+                              type="button"
+                              onClick={() => onMessageFeedback?.(msg.id, msg.feedback === "dislike" ? null : "dislike")}
+                              className={`p-1 rounded-md transition-all cursor-pointer ${
+                                msg.feedback === "dislike"
+                                  ? "text-rose-500 bg-rose-100/50 dark:bg-rose-950/30 font-bold border border-rose-500/20"
+                                  : "text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent hover:scale-110"
+                              }`}
+                              title="Dislike response"
+                              id={`feedback-dislike-${msg.id}`}
+                            >
+                              <ThumbsDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
 
                         {/* Copy button */}
                         <button

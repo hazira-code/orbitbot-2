@@ -281,6 +281,32 @@ export default function App() {
     }
   };
 
+  // Handle saving feedback on AI/Rule-based messages
+  const handleMessageFeedback = (messageId: string, feedback: "like" | "dislike" | null) => {
+    let previousFeedback: "like" | "dislike" | null = null;
+
+    setSessions(prev => prev.map(session => {
+      const targetMsg = session.messages.find(m => m.id === messageId);
+      if (!targetMsg) return session;
+
+      previousFeedback = targetMsg.feedback || null;
+
+      const updatedMessages = session.messages.map(msg => 
+        msg.id === messageId ? { ...msg, feedback } : msg
+      );
+
+      return { ...session, messages: updatedMessages };
+    }));
+
+    // Post feedback signal change to the full-stack server
+    fetch("/api/analytics/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ feedback, previousFeedback })
+    })
+    .catch(e => console.warn("Failed to update feedback on server", e));
+  };
+
   const handleSelectPrompt = (promptText: string) => {
     handleSendMessage(promptText);
   };
@@ -338,6 +364,7 @@ export default function App() {
           isAutoplayTtsEnabled={isAutoplayTtsEnabled}
           selectedModel={selectedModel}
           onSelectedModelChange={setSelectedModel}
+          onMessageFeedback={handleMessageFeedback}
         />
       </main>
 

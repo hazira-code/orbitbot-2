@@ -12,6 +12,7 @@ export interface Message {
   mode?: "rule-based" | "generative-ai" | "offline-fallback";
   modelUsed?: string;
   isSpokenText?: boolean;
+  feedback?: "like" | "dislike" | null;
   attachment?: {
     name: string;
     type: string;
@@ -39,6 +40,8 @@ export interface OrbitAnalytics {
   activeSessions: number;
   topKeywords: Record<string, number>;
   uptimeMinutes: number;
+  likes?: number;
+  dislikes?: number;
 }
 
 export interface UserProfile {

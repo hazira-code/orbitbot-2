@@ -14,7 +14,9 @@ import {
   Zap, 
   TrendingUp, 
   Flame,
-  Award 
+  Award,
+  ThumbsUp,
+  ThumbsDown
 } from "lucide-react";
 import { OrbitAnalytics } from "../types";
 
@@ -152,6 +154,34 @@ export default function AnalyticsPanel({ onClose, analyticsData }: AnalyticsPane
                   {data?.uptimeMinutes || 0}m
                 </div>
                 <div className="text-xs text-slate-400 font-medium">Server Session Age</div>
+              </div>
+            </div>
+
+            {/* Satisfaction Signals Widget */}
+            <div className="p-5 bg-slate-950/50 border border-slate-800 rounded-xl">
+              <div className="flex items-center justify-between mb-3.5">
+                <h3 className="text-sm font-semibold text-slate-200">User Satisfaction Signals</h3>
+                <span className="text-[10px] uppercase font-mono tracking-wider bg-emerald-950/60 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800/40">Real-time telemetry</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 rounded-xl flex items-center justify-between transition-all hover:bg-emerald-950/30 duration-205">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-emerald-950/80 text-emerald-400 rounded-lg">
+                      <ThumbsUp className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs text-slate-300 font-medium">Likes Received</span>
+                  </div>
+                  <span className="text-lg font-bold text-emerald-400 font-mono pr-1">{data?.likes || 0}</span>
+                </div>
+                <div className="p-3 bg-rose-950/20 border border-rose-900/30 rounded-xl flex items-center justify-between transition-all hover:bg-rose-950/30 duration-205">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-rose-950/80 text-rose-400 rounded-lg">
+                      <ThumbsDown className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs text-slate-300 font-medium">Dislikes Received</span>
+                  </div>
+                  <span className="text-lg font-bold text-rose-400 font-mono pr-1">{data?.dislikes || 0}</span>
+                </div>
               </div>
             </div>
 

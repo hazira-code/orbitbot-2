@@ -20,6 +20,8 @@ const analytics = {
   activeSessions: 1,
   topKeywords: {} as Record<string, number>,
   startTime: Date.now(),
+  likes: 0,
+  dislikes: 0,
 };
 
 // Help extract top keywords to enrich the dashboard visual model
@@ -191,6 +193,25 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
 app.post("/api/analytics/conversations", (req, res) => {
   analytics.totalConversations++;
   res.json({ success: true, totalConversations: analytics.totalConversations });
+});
+
+// Process and save feedback signals for analytics tracker
+app.post("/api/analytics/feedback", (req, res) => {
+  const { feedback, previousFeedback } = req.body;
+  
+  if (previousFeedback === "like") {
+    analytics.likes = Math.max(0, analytics.likes - 1);
+  } else if (previousFeedback === "dislike") {
+    analytics.dislikes = Math.max(0, analytics.dislikes - 1);
+  }
+
+  if (feedback === "like") {
+    analytics.likes++;
+  } else if (feedback === "dislike") {
+    analytics.dislikes++;
+  }
+
+  res.json({ success: true, likes: analytics.likes, dislikes: analytics.dislikes });
 });
 
 // Setup Vite Dev server or Serve compiled frontend
