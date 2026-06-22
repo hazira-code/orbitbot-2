@@ -1,0 +1,10 @@
+{
+  "name": "OrbitBot",
+  "description": "Your Intelligent AI Companion Beyond Conversation. A premium conversational assistant with dynamic LLM generation, detailed analytics, audio text-to-speech, and vocal Speech-to-Text integration.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
