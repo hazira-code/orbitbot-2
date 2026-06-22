@@ -1,14 +1,20 @@
-🚀 OrbitBot 2.0
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-OrbitBot 2.0 is a modern AI-powered virtual assistant designed to deliver intelligent and engaging conversations through a sleek ChatGPT-inspired interface. It combines rule-based chatbot functionality with advanced Large Language Model (LLM) support to provide accurate responses, answer user queries, assist with learning, and enhance productivity. The platform features voice input, chat history management, responsive design, and a user-friendly experience across devices.
+# Run and deploy your AI Studio app
 
-Built for students, developers, and professionals, OrbitBot 2.0 serves as a versatile assistant for education, coding, content generation, and everyday tasks. Its scalable architecture and customizable features make it an ideal foundation for creating smart conversational applications while showcasing modern AI integration and intuitive user experience design. 🚀
-Tech Stack
-Frontend: HTML5, CSS3, JavaScript
-Styling: Tailwind CSS / Bootstrap
-Backend: Python, Flask
-AI Integration: OpenAI API / Gemini API
-Voice Features: Web Speech API
-Data Storage: Local Storage / SQLite
-Version Control: Git & GitHub
-Deployment: Render / Vercel / Netlify
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/9aac3547-847c-4893-a063-9fb13724237d
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

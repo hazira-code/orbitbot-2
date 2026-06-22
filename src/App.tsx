@@ -48,6 +48,10 @@ export default function App() {
     return saved ? parseFloat(saved) : 0.7;
   });
 
+  const [isAutoplayTtsEnabled, setIsAutoplayTtsEnabled] = useState<boolean>(() => {
+    return localStorage.getItem("orbit_autoplay_tts") === "true";
+  });
+
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem("orbit_profile");
@@ -96,6 +100,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("orbit_temp", temperature.toString());
   }, [temperature]);
+
+  useEffect(() => {
+    localStorage.setItem("orbit_autoplay_tts", isAutoplayTtsEnabled.toString());
+  }, [isAutoplayTtsEnabled]);
 
   useEffect(() => {
     localStorage.setItem("orbit_profile", JSON.stringify(userProfile));
@@ -300,6 +308,8 @@ export default function App() {
         onSystemPromptChange={setSystemPrompt}
         temperature={temperature}
         onTemperatureChange={setTemperature}
+        isAutoplayTtsEnabled={isAutoplayTtsEnabled}
+        onAutoplayTtsChange={setIsAutoplayTtsEnabled}
         isDarkMode={isDarkMode}
         onThemeToggle={() => setIsDarkMode(!isDarkMode)}
         userProfile={userProfile}
@@ -315,6 +325,7 @@ export default function App() {
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
           onSelectPrompt={handleSelectPrompt}
+          isAutoplayTtsEnabled={isAutoplayTtsEnabled}
         />
       </main>
 

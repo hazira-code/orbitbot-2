@@ -32,9 +32,10 @@ interface MainChatProps {
   onSendMessage: (text: string, attachment?: any) => void;
   isLoading: boolean;
   onSelectPrompt: (promptText: string) => void;
+  isAutoplayTtsEnabled: boolean;
 }
 
-export default function MainChat({ session, onSendMessage, isLoading, onSelectPrompt }: MainChatProps) {
+export default function MainChat({ session, onSendMessage, isLoading, onSelectPrompt, isAutoplayTtsEnabled }: MainChatProps) {
   const [inputText, setInputText] = useState("");
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -48,6 +49,7 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastSpokenIdRef = useRef<string | null>(null);
 
   // Automatically scroll messages to bottom on update
   useEffect(() => {
@@ -65,6 +67,22 @@ export default function MainChat({ session, onSendMessage, isLoading, onSelectPr
       window.speechSynthesis.cancel();
     };
   }, []);
+
+  // Text-To-Speech Autoplay Trigger
+  useEffect(() => {
+    if (!isAutoplayTtsEnabled || !session || !session.messages || session.messages.length === 0) {
+      return;
+    }
+    const lastMsg = session.messages[session.messages.length - 1];
+    if (lastMsg.role === "assistant" && lastMsg.mode !== "offline-fallback") {
+      // Safeguard: only play if it hasn't been spoken yet and is very fresh (under 15s)
+      const diffMs = Date.now() - new Date(lastMsg.timestamp).getTime();
+      if (lastSpokenIdRef.current !== lastMsg.id && diffMs < 15000) {
+        lastSpokenIdRef.current = lastMsg.id;
+        handleToggleSpeak(lastMsg);
+      }
+    }
+  }, [session?.messages, isAutoplayTtsEnabled]);
 
   // Web Speech API: Speech-to-Text (STT) setup
   useEffect(() => {
