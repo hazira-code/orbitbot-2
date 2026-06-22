@@ -29,7 +29,10 @@ import {
   Languages,
   Wand2,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  Search,
+  Globe,
+  ExternalLink
 } from "lucide-react";
 import { ChatSession, Message } from "../types";
 import { SUGGESTED_PROMPTS } from "../data";
@@ -44,6 +47,8 @@ interface MainChatProps {
   selectedModel: string;
   onSelectedModelChange: (model: string) => void;
   onMessageFeedback?: (messageId: string, feedback: "like" | "dislike" | null) => void;
+  webSearchEnabled?: boolean;
+  onWebSearchToggle?: (enabled: boolean) => void;
 }
 
 export default function MainChat({ 
@@ -54,7 +59,9 @@ export default function MainChat({
   isAutoplayTtsEnabled,
   selectedModel,
   onSelectedModelChange,
-  onMessageFeedback
+  onMessageFeedback,
+  webSearchEnabled = true,
+  onWebSearchToggle
 }: MainChatProps) {
   const [inputText, setInputText] = useState("");
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
@@ -433,6 +440,53 @@ export default function MainChat({
 
                     {/* Rendering textual content utilizing high-quality Markdown */}
                     <MarkdownRenderer content={msg.content} />
+
+                    {/* Real-time Google Search sources & query grounding */}
+                    {!isUser && msg.groundingMetadata && (
+                      <div className="mt-3 bg-slate-900/5 dark:bg-black/20 p-3 rounded-xl border border-slate-200/50 dark:border-white/5 space-y-2 select-text">
+                        {/* Search queries used */}
+                        {msg.groundingMetadata.webSearchQueries && msg.groundingMetadata.webSearchQueries.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                            <span className="font-bold flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                              <Search className="w-3 h-3 animate-pulse" />
+                              Searched Google:
+                            </span>
+                            {msg.groundingMetadata.webSearchQueries.map((query, index) => (
+                              <span key={index} className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200/40 dark:border-white/5 font-mono text-[9px] font-semibold italic">
+                                &ldquo;{query}&rdquo;
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Grounding web chunks / links */}
+                        {msg.groundingMetadata.groundingChunks && msg.groundingMetadata.groundingChunks.length > 0 && (
+                          <div className="space-y-1.5">
+                            <div className="text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 font-mono">
+                              Verified Web Sources
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {msg.groundingMetadata.groundingChunks.map((chunk, index) => {
+                                if (!chunk.web?.uri) return null;
+                                return (
+                                  <a
+                                    key={index}
+                                    href={chunk.web.uri}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-slate-900/40 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 border border-slate-200/60 dark:border-white/5 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 transition-all font-sans hover:-translate-y-0.5 duration-200 shadow-sm"
+                                  >
+                                    <Globe className="w-3 h-3 flex-shrink-0 opacity-70" />
+                                    <span className="max-w-[150px] truncate">{chunk.web.title || "Sources Link"}</span>
+                                    <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Meta actions bar panel for message */}
                     <div className="mt-4 flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/55 pt-3 text-[10px] text-slate-400 dark:text-slate-500 select-none relative">
@@ -847,6 +901,24 @@ export default function MainChat({
                 </div>
               )}
             </div>
+
+            {/* Google Search Grounding toggle */}
+            <button
+              type="button"
+              onClick={() => onWebSearchToggle?.(!webSearchEnabled)}
+              className={`p-1.5 rounded-lg border flex items-center gap-1 transition-all cursor-pointer text-xs font-semibold ${
+                webSearchEnabled
+                  ? "bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-250/20 dark:border-emerald-900/40"
+                  : "bg-slate-50/50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 border-slate-200/50 dark:border-white/5 opacity-60 hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-900"
+              }`}
+              title={webSearchEnabled ? "Google Search Grounding: ENABLED" : "Google Search Grounding: DISABLED"}
+              id="google-search-grounding-toggle"
+            >
+              <Search className={`w-3.5 h-3.5 ${webSearchEnabled ? "animate-pulse" : ""}`} />
+              <span className="hidden sm:inline font-mono text-[10px] tracking-tight uppercase">
+                {webSearchEnabled ? "Search On" : "Search Off"}
+              </span>
+            </button>
 
             {/* Textarea */}
             <textarea

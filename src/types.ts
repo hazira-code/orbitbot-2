@@ -13,6 +13,15 @@ export interface Message {
   modelUsed?: string;
   isSpokenText?: boolean;
   feedback?: "like" | "dislike" | null;
+  groundingMetadata?: {
+    webSearchQueries?: string[];
+    groundingChunks?: Array<{
+      web?: {
+        uri: string;
+        title: string;
+      };
+    }>;
+  };
   attachment?: {
     name: string;
     type: string;

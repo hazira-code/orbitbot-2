@@ -57,7 +57,7 @@ app.get("/api/analytics", (req, res) => {
 // 🤖 Chat processing POST API
 app.post("/api/chat", async (req: express.Request, res: express.Response): Promise<void> => {
   try {
-    const { message, history = [], systemInstruction, temperature = 0.7, model = "gemini-3.5-flash" } = req.body;
+    const { message, history = [], systemInstruction, temperature = 0.7, model = "gemini-3.5-flash", webSearchEnabled = true } = req.body;
 
     if (!message || typeof message !== "string") {
       res.status(400).json({ error: "Message content is required" });
@@ -161,23 +161,31 @@ app.post("/api/chat", async (req: express.Request, res: express.Response): Promi
       },
     });
 
-    // Generate output content
+    // Generate output content with conditional googleSearch tool
+    const chatConfig: any = {
+      systemInstruction: systemInstruction || "You are OrbitBot, a helpful and knowledgeable celestial AI assistant. Provide extremely clean, visually organized answers with Markdown support.",
+      temperature: Number(temperature),
+    };
+
+    if (webSearchEnabled) {
+      chatConfig.tools = [{ googleSearch: {} }];
+    }
+
     const response = await ai.models.generateContent({
       model: targetModel,
       contents,
-      config: {
-        systemInstruction: systemInstruction || "You are OrbitBot, a helpful and knowledgeable celestial AI assistant. Provide extremely clean, visually organized answers with Markdown support.",
-        temperature: Number(temperature),
-      },
+      config: chatConfig,
     });
 
     const replyText = response.text || "I processed your request but returned an empty response. Let me know how else I can assist you!";
+    const groundingMetadata = response.candidates?.[0]?.groundingMetadata || null;
 
     res.json({
       text: replyText,
       mode: "generative-ai",
       modelUsed: targetModel,
       tokensCount: Math.ceil(replyText.split(/\s+/).length * 1.3),
+      groundingMetadata,
     });
 
   } catch (error: any) {

@@ -56,6 +56,16 @@ export default function App() {
     return localStorage.getItem("orbit_selected_model") || "gemini-3.5-flash";
   });
 
+  const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem("orbit_web_search");
+    return saved ? saved === "true" : true;
+  });
+
+  const handleWebSearchToggle = (enabled: boolean) => {
+    setWebSearchEnabled(enabled);
+    localStorage.setItem("orbit_web_search", String(enabled));
+  };
+
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem("orbit_profile");
@@ -235,7 +245,8 @@ export default function App() {
           history: cleanHistory,
           systemInstruction: systemPrompt,
           temperature: temperature,
-          model: forcedModel || selectedModel
+          model: forcedModel || selectedModel,
+          webSearchEnabled: webSearchEnabled
         })
       });
 
@@ -252,7 +263,8 @@ export default function App() {
         timestamp: new Date().toISOString(),
         mode: replyData.mode || "generative-ai",
         modelUsed: replyData.modelUsed,
-        tokensCount: replyData.tokensCount || 0
+        tokensCount: replyData.tokensCount || 0,
+        groundingMetadata: replyData.groundingMetadata
       };
 
       setSessions(prev => prev.map(s => 
@@ -365,6 +377,8 @@ export default function App() {
           selectedModel={selectedModel}
           onSelectedModelChange={setSelectedModel}
           onMessageFeedback={handleMessageFeedback}
+          webSearchEnabled={webSearchEnabled}
+          onWebSearchToggle={handleWebSearchToggle}
         />
       </main>
 
