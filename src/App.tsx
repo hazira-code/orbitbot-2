@@ -334,7 +334,16 @@ export default function App() {
       });
 
       if (!res.ok) {
-        throw new Error(`Server endpoint returned error code ${res.status}`);
+        let errorDetails = `Server endpoint returned status ${res.status}`;
+        try {
+          const errBody = await res.json();
+          if (errBody.error || errBody.details) {
+            errorDetails = `${errBody.error || ""}: ${errBody.details || ""}`.trim();
+          }
+        } catch {
+          // If body is not JSON or can't be read, default to status code
+        }
+        throw new Error(errorDetails);
       }
 
       const replyData = await res.json();
